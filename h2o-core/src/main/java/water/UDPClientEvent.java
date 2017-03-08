@@ -1,12 +1,14 @@
 package water;
 
+import water.util.Log;
+
 /**
  * A simple message which informs cluster about a new client
- * which was connected. The event is used only in flatfile mode
- * to allow client to connect to a single node, which will
- * inform a cluster about the client.
- * Hence, the rest of nodes will start ping client with heartbeat, and
- * vice versa.
+ * which was connected or about existing client who wants to disconnect.
+ * The event is used only in flatfile mode where in case of connecting, it
+ * it allows the client to connect to a single node, which will
+ * inform a cluster about the client. Hence, the rest of nodes will
+ * start ping client with heartbeat, and vice versa.
  */
 public class UDPClientEvent extends UDP {
 
@@ -17,8 +19,20 @@ public class UDPClientEvent extends UDP {
         && !H2O.ARGS.client
         && H2O.isFlatfileEnabled()) {
       ClientEvent ce = new ClientEvent().read(ab);
-      if (ce.type == ClientEvent.Type.CONNECT) {
-        H2O.addNodeToFlatfile(ce.clientNode);
+      switch(ce.type){
+        case CONNECT:
+          H2O.addNodeToFlatfile(ce.clientNode);
+          break;
+        case DISCONNECT:
+          Log.info("Client: "+ ce.clientNode +" has been disconnected on: " + ab._h2o);
+          H2O.removeNodeFromFlatfile(ce.clientNode);
+          if(ce.clientNode._heartbeat._bully_client){
+            Log.info("Stopping H2O cloud because bully client is disconnecting from the cloud.");
+            H2O.shutdown(0);
+          }
+        break;
+        default:
+          throw new RuntimeException("Unsupported Client event: " + ce.type);
       }
     }
 

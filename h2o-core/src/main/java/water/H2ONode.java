@@ -620,7 +620,6 @@ public final class H2ONode extends Iced<H2ONode> implements Comparable {
   public final AutoBuffer writeJSON_impl(AutoBuffer ab) { return ab.putJSONStr("node",_key.toString()); }
   public final H2ONode readJSON_impl( AutoBuffer ab ) { throw H2O.fail(); }
 
-
   public SocketChannelFactory getSocketFactory() {
     return _socketFactory;
   }
@@ -628,4 +627,5 @@ public final class H2ONode extends Iced<H2ONode> implements Comparable {
   public H2OSecurityManager getSecurityManager() {
     return _security;
   }
+
 }
